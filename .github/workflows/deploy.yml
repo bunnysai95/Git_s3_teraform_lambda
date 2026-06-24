@@ -37,7 +37,7 @@ jobs:
             pip install -r requirements.txt -t build/
           fi
           # Copy your source code in
-          cp scr/lambda_function.py build/
+          cp scr/lambda.py build/
           # Zip everything at the root of build/
           cd build
           zip -r ../lambda.zip .

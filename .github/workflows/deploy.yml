@@ -1,0 +1,71 @@
+name: Deploy Lambda
+
+# Runs every time you push to the master branch
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: us-east-1
+      ARTIFACT_BUCKET: bunnysai95-tfstate-8821   # same value you use in Terraform
+      ARTIFACT_KEY: lambda/lambda.zip
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Build Lambda package
+        run: |
+          mkdir -p build
+          # Install any dependencies from requirements.txt into the package
+          if [ -s requirements.txt ]; then
+            pip install -r requirements.txt -t build/
+          fi
+          # Copy your source code in
+          cp scr/lambda_function.py build/
+          # Zip everything at the root of build/
+          cd build
+          zip -r ../lambda.zip .
+          cd ..
+
+      - name: Upload artifact to S3
+        run: |
+          aws s3 cp lambda.zip s3://$ARTIFACT_BUCKET/$ARTIFACT_KEY
+
+      - name: Compute source code hash
+        id: hash
+        run: |
+          HASH=$(openssl dgst -sha256 -binary lambda.zip | openssl base64)
+          echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: terraform
+        run: |
+          terraform apply -auto-approve \
+            -var="artifact_bucket_name=$ARTIFACT_BUCKET" \
+            -var="artifact_s3_key=$ARTIFACT_KEY" \
+            -var="source_code_hash=${{ steps.hash.outputs.hash }}"

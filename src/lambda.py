@@ -1,48 +1,30 @@
-# import json
-# import random
-# from fastapi import FastAPI
-
-# app = FastAPI()
-
-# def lambda_handler(event, context):
-#     # Function URLs put the path here
-#     path = event.get("rawPath", "/")
-
-#     if path == "/random":
-#         numbers = [random.randint(1, 100) for _ in range(5)]
-#         return {
-#             "statusCode": 200,
-#             "body": json.dumps({"random_numbers": numbers})
-#         }
-
-#     return {
-#         "statusCode": 200,
-#         "body": json.dumps({
-#             "message": "Hello from Lambda! Deployed via Terraform + GitHub Actions + S3."
-#         })
-#     }
-
-# @app.route("/example", methods=["GET"])
-# def funtion_example():
-#     return "Hi bunny this is the first call with the lambda"
-
-
-
 from fastapi import FastAPI
 from mangum import Mangum
 
-app = FastAPI()
+app = FastAPI(title="My Lambda FastAPI")
+
+
+@app.get("/")
+def root():
+    return {"message": "Hello from FastAPI on Lambda!"}
 
 
 @app.get("/hello")
 def hello():
-    return {"message": "Hello, this is my basic GET endpoint"}
+    return {"message": "Hi bunny, this is my first FastAPI call on Lambda"}
 
 
-@app.get("/films")
-def films():
-    return {"films": ["Magadheera", "Baahubali"]}
+@app.get("/random")
+def random_numbers():
+    import random
+    return {"random_numbers": [random.randint(1, 100) for _ in range(5)]}
 
 
-# This one line is what makes FastAPI work on Lambda:
+@app.get("/films/{film_id}")
+def get_film(film_id: int):
+    return {"film_id": film_id, "title": "Baahubali"}
+
+
+# Mangum wraps your FastAPI app and becomes the Lambda entry point.
 handler = Mangum(app)
+

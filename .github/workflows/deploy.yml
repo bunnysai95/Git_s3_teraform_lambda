@@ -15,7 +15,7 @@ jobs:
 
     env:
       AWS_REGION: us-east-1
-      ARTIFACT_BUCKET: bunnysai95-tfstate-8821   # same value you use in Terraform
+      ARTIFACT_BUCKET: bunnysai95-lambda-artifacts-8821   # the ARTIFACT bucket (NOT the tfstate bucket)
       ARTIFACT_KEY: lambda/lambda.zip
 
     steps:

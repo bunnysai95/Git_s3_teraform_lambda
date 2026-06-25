@@ -72,7 +72,7 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
 resource "aws_lambda_function" "this" {
   function_name = var.function_name
   role          = aws_iam_role.lambda_role.arn
-  handler       = "lambda_function.lambda_handler"
+  handler       = "lambda.lambda_handler"
   runtime       = "python3.12"
   timeout       = 30
 

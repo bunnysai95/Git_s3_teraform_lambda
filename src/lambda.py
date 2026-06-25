@@ -1,6 +1,8 @@
 import json
 import random
+from fastapi import FastAPI
 
+app = FastAPI()
 
 def lambda_handler(event, context):
     # Function URLs put the path here
@@ -19,3 +21,9 @@ def lambda_handler(event, context):
             "message": "Hello from Lambda! Deployed via Terraform + GitHub Actions + S3."
         })
     }
+
+@app.route("/example", methods=["GET"])
+def funtion_example():
+    return "Hi bunny this is the first call with the lambda"
+
+
